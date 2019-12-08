@@ -1,0 +1,140 @@
+1.
+I downloaded simpgmp.c with wget and then ran the command
+  gcc -lgmp simpgmp.c -o simpgmp
+to build with the GMP library
+
+2.
+I found out that ./simpgmp takes in one argument and returns 
+that 2^ of that argument. So I did ./simpgmp 16777216 and put
+it into result.txt. I also ran ./simpgmp and piped it into a
+wc -c. It looks like there was 5,050,446 decimal digits and that
+it starts with '1818' and ends with '7536' which is correct.
+
+3.
+It uses:
+ linux-vdso.so.1 =>  (0x00007ffd6ab79000)
+ libgmp.so.10 => /lib64/libgmp.so.10 (0x00007f1fd8e57000)
+ libc.so.6 => /lib64/libc.so.6 (0x00007f1fd8a89000)
+ /lib64/ld-linux-x86-64.so.2 (0x00007f1fd90cf000)
+
+4.
+It seems to use open, read, fstat, and then mmap. For example in
+the library libgmp.so.10:
+
+open("/lib64/libgmp.so.10", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\304\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=495720, ...}) = 0
+mmap(NULL, 2584736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f8874792000
+
+Open will open the library file for accessing. In this case it assigns
+a file id of 3. Then read will read the ELF of that executable to get 
+the bytes in it. Next, fstat witkkk get file info so that it can use
+mmap to map the library into memory properly.
+
+5. 
+bzcmp
+dbus-test-tool
+genisoimage
+hltest
+klist
+mf-nowin
+ospcat
+pgmmedian
+ppmhist
+rsvg-convert
+targetctl
+xgamma
+
+6.
+To run the commands I used ldd $(which [COMMAND]) because ldd
+requires the path to the executable
+
+bzcmp and targetctl does not work as they are not dynamic excutables
+meaning that were not dynamically linked.
+
+7.
+To do this I wrote a bash script that runs ldd for each of the commands
+and pipes them into their own file. I then concattenated all of these
+and pipes it into another file. I then grepped the file to only have 
+the library names not anything else.
+
+Using:
+  grep -o "^*\s=" -> Returns file names with '=' at the end
+  grep -o "^.*\s" -> Removes the '=' at the end
+
+This gets the list:
+
+ libattr.so.1
+ libblkid.so.1
+ libbz2.so.1
+ libcairo.so.2
+ libcap.so.2
+ libcom_err.so.2
+ libcroco-0.6.so.3
+ libc.so.6
+ libdbus-1.so.3
+ libdl.so.2
+ libdw.so.1
+ libEGL.so.1
+ libelf.so.1
+ libexpat.so.1
+ libffi.so.6
+ libfontconfig.so.1
+ libfreetype.so.6
+ libfribidi.so.0
+ libgcc_s.so.1
+ libgcrypt.so.11
+ libgdk_pixbuf-2.0.so.0
+ libgio-2.0.so.0
+ libGLdispatch.so.0
+ libglib-2.0.so.0
+ libGL.so.1
+ libGLX.so.0
+ libgmodule-2.0.so.0
+ libgobject-2.0.so.0
+ libgpg-error.so.0
+ libgpm.so.2
+ libgraphite2.so.3
+ libharfbuzz.so.0
+ libk5crypto.so.3
+ libkeyutils.so.1
+ libkpathsea.so.6
+ libkrb5.so.3
+ libkrb5support.so.0
+ liblz4.so.1
+ liblzma.so.5
+ libmagic.so.1
+ libmount.so.1
+ libm.so.6
+ libnetpbm.so.11
+ libnsl.so.1
+ libosp.so.5
+ libpango-1.0.so.0
+ libpangocairo-1.0.so.0
+ libpangoft2-1.0.so.0
+ libpcre.so.1
+ libpixman-1.so.0
+ libpng15.so.15
+ libpthread.so.0
+ libresolv.so.2
+ librols.so.0
+ librsvg-2.so.2
+ librt.so.1
+ libselinux.so.1
+ libstdc++.so.6
+ libsystemd.so.0
+ libthai.so.0
+ libusal.so.0
+ libuuid.so.1
+ libX11.so.6
+ libXau.so.6
+ libxcb-render.so.0
+ libxcb-shm.so.0
+ libxcb.so.1
+ libXext.so.6
+ libxml2.so.2
+ libXrender.so.1
+ libXxf86vm.so.1
+ libz.so.1
+ linux-vdso.so.1
+
